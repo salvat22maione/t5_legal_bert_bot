@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .chat-entry {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .chat-entry .user {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .chat-entry .bot {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .chat-entry .message {
+            margin-left: 10px;
+            background-color: #e0e0e0;
+            padding: 8px;
+            border-radius: 4px;
+            max-width: 75%;
+        }
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            text-align: center;
+        }
+        #loading-dots {
+            display: inline-block;
+            font-size: 18px;
+            margin-left: 5px;
+            color: #000000;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        .loading span {
+            animation: blink 1.5s infinite;
+        }
+        .loading span:nth-child(2) { animation-delay: 0.3s; }
+        .loading span:nth-child(3) { animation-delay: 0.6s; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Legal Chatbot</h1>
+
+    <div class="chat-box" id="chat-box">
+        {% for entry in conversation %}
+            <div class="chat-entry">
+                {% if loop.index is odd %}
+                    <div class="user">Utente:</div>
+                    <div class="message">{{ entry }}</div>
+                {% else %}
+                    <div class="bot">Bot:</div>
+                    <div class="message">{{ entry }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="question-input" placeholder="Fai una domanda..." required>
+        <button onclick="sendQuestion()">Invia</button>
+    </div>
+    
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+</div>
+
+<script>
+function sendQuestion() {
+    var question = document.getElementById("question-input").value;
+    if (!question) {
+        alert("Inserisci una domanda!");
+        return;
+    }
+
+    var chatBox = document.getElementById("chat-box");
+
+    // Mostra la domanda dell'utente
+    var userEntry = document.createElement("div");
+    userEntry.classList.add("chat-entry");
+    userEntry.innerHTML = '<div class="user">Utente:</div><div class="message">' + question + '</div>';
+    chatBox.appendChild(userEntry);
+
+    // Resetta il campo input
+    document.getElementById("question-input").value = "";
+
+    // Crea un nuovo contenitore per la risposta del bot
+    var botEntry = document.createElement("div");
+    botEntry.classList.add("chat-entry");
+    var botMessage = document.createElement("div");  
+    botMessage.classList.add("message");
+    botMessage.innerHTML = '<span id="loading-dots">⏳</span>'; // Mostra la clessidra iniziale
+    botEntry.innerHTML = '<div class="bot">Bot:</div>';
+    botEntry.appendChild(botMessage);  // Aggiunge il messaggio sotto il nome "Bot:"
+    chatBox.appendChild(botEntry);
+
+    // Effetto puntini animati
+    var loadingDots = document.getElementById("loading-dots");
+    var dotCount = 0;
+    var dotInterval = setInterval(() => {
+        if (dotCount > 2) dotCount = 0;
+        loadingDots.innerHTML = ".".repeat(dotCount + 1);
+        dotCount++;
+    }, 500);
+
+    // Avvia lo streaming
+    var eventSource = new EventSource("/stream?question=" + encodeURIComponent(question));
+
+    eventSource.onmessage = function(event) {
+        if (event.data === "[FINE]") {
+            eventSource.close();
+            clearInterval(dotInterval); // Ferma i puntini
+            loadingDots.remove(); // Rimuove i puntini alla fine
+            return;
+        }
+        if (loadingDots) {
+            loadingDots.remove(); // Rimuove il caricamento al primo messaggio
+            loadingDots = null;
+        }
+        botMessage.innerHTML += event.data + " ";  
+        chatBox.scrollTop = chatBox.scrollHeight; // Scorrimento automatico
+    };
+
+    eventSource.onerror = function(event) {
+        console.error("Errore connessione:", event);
+        eventSource.close();
+        clearInterval(dotInterval);
+        botMessage.innerHTML += "<br><small>⚠️ Connessione chiusa.</small>";
+    };
+}
+
+
+
+
+</script>
+
+
+
+</body>
+</html>
