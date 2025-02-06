@@ -24,7 +24,7 @@ Per eseguire l'applicazione in locale, è necessario avere:
 ### **Clonare il repository**
 ```sh
  git clone https://github.com/salvat22maione/t5_legal_bert_chatbot.git
- cd app.py
+ cd t5_legal_bert_chatbot.py
 ```
 
 ### **Creare un ambiente virtuale e installare le dipendenze**
