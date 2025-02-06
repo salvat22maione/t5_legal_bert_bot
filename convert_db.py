@@ -2,7 +2,7 @@ from pymongo import MongoClient
 import json
 
 # Connessione al database MongoDB Atlas
-MONGO_URI=""
+MONGO_URI="-"
 client = MongoClient(MONGO_URI)
 
 # Seleziona il database e la collection
