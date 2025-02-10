@@ -7,7 +7,7 @@ from pymongo import MongoClient
 
 
 # Carica il modello direttamente da Hugging Face
-model_name = "tatore22/legal_bert_chatbot"
+model_name = "tatore22/legal_bert_chatbot/qa_model"
 qa_pipeline = T5ForConditionalGeneration.from_pretrained(model_name)
 
 # Carica il modello Legal-BERT
