@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, Response
-from transformers import AutoTokenizer, AutoModel,T5ForConditionalGeneration
+from transformers import AutoTokenizer, AutoModel,pipeline
 from sentence_transformers import util
 import time, torch, logging
 from fuzzywuzzy import fuzz
@@ -8,7 +8,7 @@ from pymongo import MongoClient
 
 # Carica il modello direttamente da Hugging Face
 model_name = "tatore22/legal_bert_chatbot"
-qa_pipeline = T5ForConditionalGeneration.from_pretrained(model_name)
+qa_pipeline = pipeline("text2text-generation", model=model_name)
 
 # Carica il modello Legal-BERT
 tokenizer = AutoTokenizer.from_pretrained("nlpaueb/legal-bert-base-uncased")
